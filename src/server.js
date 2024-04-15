@@ -96,5 +96,165 @@ app.post("/api/altaEmpleat", async (req, res) => {
 });
 
 app.get("/api/llistaDoctors", async (req, res) => {
-  
+  try {
+    const doctors = await models.doctor.findAll();
+
+    if (doctors.length > 0) {
+      res.status(200).send({
+        code: 200,
+        message: "Everything went well :)",
+        data: doctors,
+      });
+    } else {
+      res.status(404).send({
+        code: 404,
+        message: "No data found :(",
+      })
+    }
+  } catch (error) {
+    res.status(500).send({
+      code: 500,
+      message: "Error: "+ error.message,
+    })
+    console.log(`Error getting doctors :( | ${error}`)
+  }
+});
+
+
+app.get("/api/amountOfEmpleats", async (req, res) => {
+  console.log(`params: ${req.query}`);
+  if (req.query.deptId) {
+    try {
+      const amountOfEmpleat = await models.empleat.count({
+        where: {
+          empleat_dept_num: req.query.deptId,
+        }
+      });
+
+      console.log("amount of Empleat", amountOfEmpleat);
+      if (amountOfEmpleat != null) {
+        res.status(200).send({
+          code: 200,
+          message: "correctly gotten amount of empleats",
+          data: amountOfEmpleat,
+        })
+      } else {
+        res.status(404).send({
+          code: 404,
+          message: "No data found :(",
+        })
+      }
+    } catch (error) {
+      res.status(500).send({
+        code: 500,
+        message: error
+      })
+    }
+  }
+
+});
+
+
+app.put("/api/updateDoctorWithId", async (req, res) => {
+  if (req.body && req.query) {
+    console.log(req.body);
+    try {
+      const updatedDoctor = await models.doctor.update({
+        doctor_nom: req.body.doctor_name,
+        doctor_especialitat: req.body.doctor_especialitat,
+      }, {
+        where: {
+          doctor_hospital_codi: req.query.doctor_hospital_codi,
+          doctor_especialitat: req.query.doctor_especialitat,
+        }
+      });
+
+      if (updatedDoctor != null) {
+        res.status(200).send({
+          code: 200,
+          message: "updated doctor",
+          data: updatedDoctor
+        });
+      } else {
+        res.status(404).send({
+          code: 404,
+          message: "doctor not found",
+        });
+
+        console.log("doctor not found");
+      }
+
+    } catch (error) {
+      res.status(500).send({
+        code: 500,
+        message: error
+      });
+
+      console.log(`ERROR: ${error}`)
+    }
+  }
+});
+
+
+app.delete("/api/deleteEmpleatWithId", async (req, res) => {
+  if (req.query) {
+    try {
+      const deleteEmployee = models.empleat.destroy({
+        where: {
+          empleat_num: req.query.empleat_num,
+        }
+      });
+
+      if (deleteEmployee != null) {
+        res.status(200).send({
+          code: 200,
+          message: "deleted employee",
+          data: deleteEmployee
+        })
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        code: 500,
+        message: error
+      })
+    }
+  }
+});
+
+
+app.get("/api/getHospitalSalesAndLlits", async (req, res) => {
+  try {
+    models.hospital.hasMany(models.sala, { foreignKey: 'sala_hospital_codi', sourceKey: 'hospital_codi' });
+    models.sala.belongsTo(models.hospital, { foreignKey: 'sala_hospital_codi', targetKey: 'hospital_codi' });
+
+    const hospitalsWithSales = await models.hospital.findAll({
+      include: [{
+        model: models.sala,
+        attributes: ['sala_nllits'],
+      }],
+      attributes: ['hospital_nom'],
+    });
+
+    const result = hospitalsWithSales.map(hospital => {
+      const totalBeds = hospital.salas.reduce((total, sala) => total + sala.sala_nllits, 0);
+      return {
+        hospital: hospital.hospital_nom,
+        totalRooms: hospital.salas.length,
+        totalBeds
+      };
+    });
+    res.status(200).send({
+      code: 200,
+      message: "sussy?",
+      data: result
+    })
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      code: 500,
+      message: `Error getting hospital wards | ${error}`,
+    })
+  }
 });
