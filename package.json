@@ -18,7 +18,13 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "moment": "^2.30.1",
+    "mysql2": "^3.9.4",
     "rxjs": "~7.8.0",
+    "sequelize": "^6.37.3",
+    "sequelize-auto": "^0.8.8",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },
